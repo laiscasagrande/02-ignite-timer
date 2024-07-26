@@ -16,7 +16,8 @@ export const GlobalStyle = createGlobalStyle` //aqui eu coloco todo css que eu q
 
 body{
   background: ${props => props.theme['gray-900']}; //Tenho que colocar entre colchetes por causa do hífen
-  color: ${props => props.theme['gray-300']}
+  color: ${props => props.theme['gray-300']};
+  -webkit-font-smoothing: antialiased;
 }
 
 body, input, textarea, button{
