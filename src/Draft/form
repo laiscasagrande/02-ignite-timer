@@ -1,0 +1,11 @@
+Controlled: manter, em tempo real, o estado, a informação que o usuário insere na nossa aplicação dentro de uma variável do nosso componente.
+Então, toda vez que o usuário mudar a informação, escrever um novo texto no input, eu atualizo uma informação no estado para eu ter a informação que o usuário atualizou no estado.
+Resumindo, é manter a informação do input do usuário em tempo real, que fica guardada em um estado da nossa aplicação.
+Mas, nem sempre essa forma é adequada, pois cada vez que eu faço formulários usando a forma controlled, o react recalcula tudo de novo e isso pode causar lentidão em nosso sistema
+
+Uncontrolled: buscamos a informação do valor do input somente quando precisarmos dela.
+Eu uso essa técnica quando há muitos inputs. Porque, se eu fizer do outro método, cada vez que o usuário digitar uma tecla, eu atualizo a página inteira.
+
+A react hook form consegue trabalhar com nossos formulários tanto de uma maneira controlled quanto uncontrolled, ou seja, conseguimos ter o melhor dos dois lados, conseguimos ter performance(uncontrolled) sem abrir mão da fluidez e interatividade(controlled)
+O register é uma função que recebe o nome do input e retorna alguns métodos que são os métodos que a gente utiliza para trabalhar com inputs, como onChange, onBlur, onFocus. Por isso ela tem os três pontos do spread operator, porque ela busca todas essas funções. É a mesma coisa que colocar onChange, por exemplo.
+O watch é assistir, obervar alguma coisa
