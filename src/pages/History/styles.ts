@@ -61,27 +61,30 @@ th {
 
 `;
 
-const STATUS_COLOR = {  //objeto de cores para fazer um mapeamento 
-    yellow: 'yellow-500',
+const STATUS_COLOR = {  //objeto de cores para fazer um mapeamento para rgb, ou seja, para mim criar as chaves com os códigos das cores
+    yellow: 'yellow-500', //Eu quero que seja uma cor específica, mas como essa cor vem lá do nosso tema, então essa cor precisa ser variável. Assim, ao invés de mapear essa cor para um hexadecimal direto, eu vou mapear para uma string lá do nosso tema. Basicamante, eu poderia passar para a chave a cor em hexadecimal, mas estou passando a variável que existe no nosso tema
     green: 'green-500',
     red: 'red-500'
 } as const //Eu criei um objeto. O typeScript quando lê esse objeto, ele entende que esse objeto ele pode ter uma chave yellow, green e red. E o valor dessas propriedades é um texto, pode ser qualquer texto, é um texto variável. Para mim visar que sempre será um desses três e ele não pode mudar, eu passo as const. Assim, quando for yellow, é yellow-500, não uma string qualquer
+//as const estou dizendo que só podem ser esses valores, não podem ser outros. Porque antes, estava dizendo que pode ser qualuer string. Isso porque, no nosso tema, tem que ser aquela cor, não pode ter a possibilidade de existir outra. E, se eu colocar uma variável que não existe no nosso tema, vai dar erro
+
+//Mas porque eu já não defino essas cores direto na interface? Porque na interface eu só passo o tipo, não algum valor para uma chave
 
 interface StatusProps {
     statusColor: keyof typeof STATUS_COLOR //As cores disponíveis que eu tenho são as chaves, as keys do tipo objeto STATUS_COLOR
 } //eu tenho que colocar typeof porque o typeScript não consegue ler objetos javascript. Ele lê o tipo de objetos javascript
 
-export const Status = styled.span<StatusProps>` //esse meu span pode receber essas propriedades
+export const Status = styled.span<StatusProps>` //esse meu span pode receber essas propriedades. Mesmo sendo um estilo, também podemos passar propriedades. Para fazer isso, eu crio uma interface com as propriedades que ele pode receber
 display: flex;  
 align-items: center;
-gap: 0.5rem;
+gap: 0.5rem; //gap e align-items para o before
 
 &::before { //o before e o after são elementos que ficam detro da tag, dentro do span, no começo e no final. O before é no começo e o after é no final
 content: ''; //para ele aparecer em tela, eu preciso que tenha alguma coisa, nem que seja um content vazio
 width: 0.5rem;
 height: 0.5rem;
 border-radius: 9999px; //ou 50%, para ficar totalmente aredondado
-background: ${(props) => props.theme[STATUS_COLOR[props.statusColor]]};
+background: ${(props) => props.theme[STATUS_COLOR[props.statusColor]]}; //Eu vou selecionar a cor baseado no STATUS_COLORS passando a propriedade que vem de props.statusColor
 
 }
 `;
