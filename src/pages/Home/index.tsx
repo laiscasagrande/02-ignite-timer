@@ -2,13 +2,36 @@ import { Play } from "phosphor-react";
 import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, Separator, StartCountdownButton, TaskInput } from "./styles";
 //import { useState } from "react";
 import {useForm} from 'react-hook-form'
+import { zodResolver } from "@hookform/resolvers/zod"; //para integrar a biblioteca zod no react-hook-form
+import * as zod from 'zod' //uso essa sintaxe (* as) para bibliotecas que não são export default
 
-export function Home() {
-const {register, handleSubmit, watch  } = useForm() //É um objeto com várias funcionalidades que eu posso utizar para criar nosso formulário. Como o useForm retorna um objeto, eu posso usara desestruturação para extrair algumas variáveis desse retorno. As principais funções são o register e o handleSubmit
+const newCycleFormValidationSchema = zod.object({ //utilizamos o nome schema porque essas bibliotecas de validação utilizam schema base. Um schema nada mais é do que definirmos um formato e validarmos os dados do nosso formulário com base neste formato, com base em um schema 
+task: zod.string().min(1, 'informe a tarefa'),//eu tenho um objeto que contém nome da tarefa e o tempo de execução, por isso coloquei zod.object
+minutesAmount: zod.number().min(5, 'O ciclo precisa ser de no mínimo 5 minutos').max(60, 'O ciclo precisa ser de no máximo 60 minutos')
+})
+
+// interface NewCycleFormData { //Utilize interface quando você quer definit um objeto de validação, e use type quando você for criar uma tipagem do typeScript a partir de outra referência, de uma outra variável. Nesse caso, estamos criando um type a aprtir das informações que inferimos pelo zod acima
+//   task: string;
+//   minutesAmount: number;
+// }
+
+//Ele retirou isso, inferiu isso dentro da validação que fizemos usando o zod. Então, ao invés de criar uma nova interface contendo esses dados, como eu já tenho elas definidas na validação do zod, eu posso criar um type no qual a tipagem pode ser inferida através da validação com o zod
+type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema> //o inferir, dentro do typeScript, é definir automaticamnete a tipagem de alguma coisa
+//importante lembrar que, sempre que eu estou querendo refenrenciar uma variável javaScript dentro do typeScript, eu preciso usar o typeof dentro dela
+
+export function Home() { //se você passar o mouse em cima do useForm, você verá que o primeiro parâmetro que eu posso passar no generic é umm objeto, e o segundo é um any 
+const {register, handleSubmit, watch, reset  } = useForm<NewCycleFormData>({//É um objeto com várias funcionalidades que eu posso utizar para criar nosso formulário. Como o useForm retorna um objeto, eu posso usara desestruturação para extrair algumas variáveis desse retorno. As principais funções são o register e o handleSubmit
+resolver: zodResolver(newCycleFormValidationSchema), //aqui eu tenho que passar meu schema de validação, ou seja, de quer forma eu quer validar os campos que estão presentes no formulário
+defaultValues: { //ela traz a possibilidade de eu passar qual é o valor inicial de cada campo
+task: '', //como eu coloquei a interface do objeto nos generics do useForm, se eu der um ctrl espaço aqui, vai aparecer todas as opções que eu tenho. Fica mais organizado dessa forma 
+minutesAmount: 0
+}
+}) //aqui estou cirando um objeto de configuração para o useForm
 //const [task, setTask] = useState('')
 
-function handleCreateNewCycle(data: any){
+function handleCreateNewCycle(data: NewCycleFormData){ //esse data é um objeto que contém dois campos do nosso formulário(task e minutesAmount)
 console.log(data) //como guardei em um register, ele guardou tudo que eu digitei
+reset(); //ele limpa os campos, depois de o formulário ser submitado, para o valor inicial. Ele volta para o valor que eu defini dentro do defaultValues. 
 }
 
 const task = watch('task')//quero obervar o campo task, que foi o nome que eu dei no register. Agora consigo saber o valor do meu campo task em tempo real. Vou observar o campo task. Se ele for diferente de vazio, eu quero habilitar o botão  
@@ -43,9 +66,9 @@ const isSubmitDisabled = !task //meu botão vai estar desabilitado quando eu nã
             id="minutesAmount"
             list=""
             placeholder="00"
-            step={5} //vai pular de 5 em 5
-            min={5}
-            max={60}
+            // step={5} //vai pular de 5 em 5
+            // min={5}
+            // max={60}
             {...register('minutesAmount', {valueAsNumber: true})} //o valueAsNumber é para informar que os minutos são n´meros, não strings
           >
           </MinutesAmountInput>

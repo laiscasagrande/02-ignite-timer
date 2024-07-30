@@ -8,4 +8,5 @@ Eu uso essa técnica quando há muitos inputs. Porque, se eu fizer do outro mét
 
 A react hook form consegue trabalhar com nossos formulários tanto de uma maneira controlled quanto uncontrolled, ou seja, conseguimos ter o melhor dos dois lados, conseguimos ter performance(uncontrolled) sem abrir mão da fluidez e interatividade(controlled)
 O register é uma função que recebe o nome do input e retorna alguns métodos que são os métodos que a gente utiliza para trabalhar com inputs, como onChange, onBlur, onFocus. Por isso ela tem os três pontos do spread operator, porque ela busca todas essas funções. É a mesma coisa que colocar onChange, por exemplo.
-O watch é assistir, obervar alguma coisa
+O watch é assistir, obervar alguma coisa.
+Ele não traz nenhuma validação, mas é possível usar outras bibliotecas de validação que podem ser integradas ao react hook form, por exemplo, a zod.
