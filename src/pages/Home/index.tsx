@@ -35,6 +35,8 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null) //o id do ciclo ativo pode ser null, porque enquanto o usuário não iniciar um novo ciclo, ele será null
   //Este é um estado que irá controlar se um ciclo está ativo ou não com base no seu id
 
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0) //ela vai guardar a quantidade de segundos que já se passaram desde que o ciclo se iniciou. Assim, conseguimos ir reduzindo desse total de segundos (totalSeconds) menos os segundos que já se passaram
+
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({//É um objeto com várias funcionalidades que eu posso utizar para criar nosso formulário. Como o useForm retorna um objeto, eu posso usara desestruturação para extrair algumas variáveis desse retorno. As principais funções são o register e o handleSubmit
     resolver: zodResolver(newCycleFormValidationSchema), //aqui eu tenho que passar meu schema de validação, ou seja, de quer forma eu quer validar os campos que estão presentes no formulário
     defaultValues: { //ela traz a possibilidade de eu passar qual é o valor inicial de cada campo
@@ -65,6 +67,16 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)//mostrar na tela qual é o ciclo ativo. Com base no id do ciclo ativo, ele vai percorrer todos os ciclos e verificar quel ciclo tem o mesmo id do ciclo ativo
 
   console.log("Ciclo ativo", activeCycle)
+
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
+  //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0//A conta, o tanto que já passou. Se tiver um ciclo ativo, vai pegar o total de segundos menos o total de segundo que já passou
+
+  const minutesAmount = Math.floor(currentSeconds / 60)//Agora eu vou calcular quantos minutos eu tenho dentro desse total de segundos. O floor arredonda para baixo. Eu estou fazendo isso para mostrar isso em tela
+  const secondsAmount = currentSeconds % 60//Calcular quantos segundos eu tenho do resto da divisão de cima. Se de cima estou pegando o valor inteiro, aqui estou pegando o resto. 
+
+  const minutes = String(minutesAmount).padStart(2, '0') //Convterter o número de minutos para uma string para usar o padStart. Este é um método que preenche uma string até um tamanho específico caso ela não tenha aquele tamanho ainda. A variável de minutos eu sempre quero que ela tenha dois caracteres, se ela não tiver dois caraceres, eu voi incluir 0 no começo, na start da string até completar como outro caracter
+  const seconds = String(secondsAmount).padStart(2, '0')
 
   const task = watch('task')//quero obervar o campo task, que foi o nome que eu dei no register. Agora consigo saber o valor do meu campo task em tempo real. Vou observar o campo task. Se ele for diferente de vazio, eu quero habilitar o botão  
   const isSubmitDisabled = !task //meu botão vai estar desabilitado quando eu não tiver nada dentro da task. Para questões de legibilidade
@@ -109,11 +121,11 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span> {/*Coloquei um vetor aqui porque quero pegar a primeira letra da string*/}
+          <span>{minutes[1]}</span>{/*Com o pedStart, em cima peguei a primeira string e aqui peguei a segunda. Ou seja, eu tenho dentro de minutes uma string 21 (que representa 21 minutos). Aqui estou pegando na posição 0, que é a string 2, e na posição 1, que é a string 1.*/}
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
         <StartCountdownButton disabled={isSubmitDisabled} type="submit">
           <Play size={24} />
