@@ -4,7 +4,8 @@ import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, S
 import { useForm } from 'react-hook-form'
 import { zodResolver } from "@hookform/resolvers/zod"; //para integrar a biblioteca zod no react-hook-form
 import * as zod from 'zod' //uso essa sintaxe (* as) para bibliotecas que não são export default
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {differenceInSeconds} from 'date-fns' //calcula a diferença de duas datas em segundos
 
 const newCycleFormValidationSchema = zod.object({ //utilizamos o nome schema porque essas bibliotecas de validação utilizam schema base. Um schema nada mais é do que definirmos um formato e validarmos os dados do nosso formulário com base neste formato, com base em um schema 
   task: zod.string().min(1, 'informe a tarefa'),//eu tenho um objeto que contém nome da tarefa e o tempo de execução, por isso coloquei zod.object
@@ -23,7 +24,8 @@ type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema> //o infer
 interface Cycle { //interface para definir qual vai ser o formato de cada ciclo que eu adcionar dentro da minha aplicação
   id: string;//como eu vou ter um histórico de ciclos, é importante que eu tenha um id para representar cada ciclo. Cada vez que eu tiver uma informação que vai ser uma lista, é importante que eu tenha alguma coisa para identificar cada informação. Nesse caso, uma informação para representar cada ciclo
   task: string; //a descrição da tarefa
-  minutesAmount: number //a quantidade de minutos
+  minutesAmount: number; //a quantidade de minutos
+  startDate: Date //Vou salvar a data que o meu timer começou a ficar ativo. O Date do javascript é tanto data quanto horário
 }
 
 export function Home() { //se você passar o mouse em cima do useForm, você verá que o primeiro parâmetro que eu posso passar no generic é umm objeto, e o segundo é um any 
@@ -46,13 +48,29 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
   }) //aqui estou cirando um objeto de configuração para o useForm
   //const [task, setTask] = useState('')
 
+//O método find percorre todo o array e traz o primeiro elemento que satisfaz a consdição
+const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)//mostrar na tela qual é o ciclo ativo. Com base no id do ciclo ativo, ele vai percorrer todos os ciclos e verificar quel ciclo tem o mesmo id do ciclo ativo
+
+console.log("Ciclo ativo", activeCycle)
+
+useEffect(() => { //vamos criar nosso intervalo de tempo dentro do useEffect
+if (activeCycle){ //sempre quando usamos uma variável que está fora do useEffect, temos que incluir essa variável no nosso array de dependências
+setInterval(() => {
+  setAmountSecondsPassed(
+    differenceInSeconds(new Date(), activeCycle.startDate) //a data atual e a data quando o ciclo começou
+  )//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram
+}, 1000)//Ele vai contar quantos segundos se passaram nesse intervalo a cada 1 segundo. Se o usuário informou 5, vai pegar o horario atual e vai decrementar a diferença em segundos do 5 até agora
+} //se o meu ciclo estiver ativo (eu só quero fazer a redção do timer se o meu ciclo tiver ativo, porque se não estiver, vou fazer redução do que?), vou dar um setInterval a cada 1 segundo
+}, [activeCycle])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
+
   //Como estou usando o register, os valores task e minutesAmount são registrados, armazenados. Assim, quando o formulário for submetido, o react-hook-form coleta os dados registrados e passa esses valores para a função handleCreateNewCycle, que é a função chamada na hora da submissão, e, para acessar esses valores, você pode usar um parâmetro, que neste caso é o data
   function handleCreateNewCycle(data: NewCycleFormData) { //esse data é um objeto que contém dois campos do nosso formulário(task e minutesAmount)
     const id = String(new Date().getTime()) //converti a data para string porque definimos id como string
     const newCycle: Cycle = {//criar um novo ciclo. Como eu coloquei :Cycle, ele já vai me trazer tudo que tem dentro de Cycle, ou seja, todas as informações que ue preciso para criar um novo ciclo
       id,
       task: data.task, //Eu estou usando o NewCycleFormData para pegar os valores task e minutesAmount que vem do formulário; e Cycle para guradar as informações de cada ciclo
-      minutesAmount: data.minutesAmount
+      minutesAmount: data.minutesAmount,
+      startDate: new Date //data atual, ou seja, a data que o ciclo iniciou
     }
     //console.log("aaaaa", newCycle)
     setCycles((state) => [...state, newCycle])//adicionar meu novo ciclo a listagem de ciclos. Assim, para acresecentar um novo ciclo, eu preciso pegar todos os ciclos que ue já tenho e adiocinar o novo ciclo
@@ -62,11 +80,6 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
     //console.log(data) //como guardei em um register, ele guardou tudo que eu digitei
     reset(); //ele limpa os campos, depois de o formulário ser submitado, para o valor inicial. Ele volta para o valor que eu defini dentro do defaultValues. 
   }
-
-  //O método find percorre todo o array e traz o primeiro elemento que satisfaz a consdição
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)//mostrar na tela qual é o ciclo ativo. Com base no id do ciclo ativo, ele vai percorrer todos os ciclos e verificar quel ciclo tem o mesmo id do ciclo ativo
-
-  console.log("Ciclo ativo", activeCycle)
 
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
   //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
