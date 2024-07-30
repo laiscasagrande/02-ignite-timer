@@ -1,0 +1,19 @@
+//Side-effect: efeito colateral, ou seja, é uma ação que acontece por causa de uma ação anterior. Se eu fiz alguma ação, essa ação tem um efeito colateral, tem uma consequência.
+//Toda vez que uma variável mudar, eu quero que uma função seja disparada.
+//Vamos supor que eu tenho uma lista (const [list, setList] = useState([])). Cada vez que eu alterar essa lista, seja editando, excluindo, alterando ou adicionando, eu quero avisar a minha api que essa lista foi salva.
+//Para isso, eu crio uma função AvisarApi. Ao invés de eu chamar essa função na função de adicionar, editar, excluir e alterar, eu posso colocar a função AvisarApi dentro de um useEffect e a varável lista dentro dos colcehtes. Assim, cada vez que a variável list mudar, a função AvisarApi será chamada.
+//useEffect(() => {AvisarApi}, [list]) o primeiro parâmetro é qual função vai ser executada e o segundo parâmetro é quando essa função vai ser executada. O segundo parâmetro (array de dependências) é um array, e dentro desse array eu passo qual variável eu quero ficar monitorando. Assim, se eu mudar a variável list, editando ela, por exemplo, eu quero executar a função AvisarApi
+
+//Mas, se toda vez que um estado muda o react renderiza todo o componente e tudo que está dentro dele, por que eu tenho que guardar em um useEffect? Por que simplesmente não chamo essa função que eu quero executar em qualquer lugar do meu componente? Porque no useEffect eu falo exatamente qual variável eu quero monitorar. Assim, se eu simplesmente chamo essa função em qualquer lugar do meu componente, 
+//não importa o que aconteceu para esse componente renderizar novamente, essa função será executada. Com base nisso, muitas vezes executamso códigos desnecessários. Se eu coloco em um useEffetc, essa função só será executada se a a variável que estou monitoando mudar, assim, mesmo que o componente renderize novamente por qualquer motivo que seja, essa função não vai. Dessa forma, 
+//só executamso códigos quando é realmente necessário, e não quando o componente da apicação mudar.
+
+//O useEffect é executado duas vezes. No início, assim que o componente for exibido em tela em uma primeira vez, e quando a variável que estamos monitorando mudar.
+//Mas, tem soluções que eu posso fazer caso eu não queira que o useEffect seja executado na primeira vez que o componente for exibido em tela. Por exemplo, eu posso colocar dentro do useEffect um if no qual ele só vai executar a função AvisarApi caso a lista não esteja vazia.
+//Se eu não colocar nada no array de dependências, o useEffect só vai ser executado em somente um momento, quando o componente for exibido em tela. Isso é bom quando quero fazer uma chamada para uma api, no qual quero chamar ela somente quando meu componente é exibido em tela. Esse useEffect vai ser executado cada vez que eu der um F5.
+
+//Como o react renderiza todo o componente quando um estado muda, se eu guardar um estado dentro do useEffect que sempre mudará quando um outro estado alterar, o componente vai ser renderizado duas vezes, a primaira, quando a variável que estou monitorando mudar,
+//e a segunda, quando o estado dentro do useEffect, que eu quero que execute, muda. Tive duas renderizações porque atualizei dois estados dentro do componente.
+//Dessa forma, sempre que eu for criar uma informação que é originada a partir de outras informações no meu componente, isso não precisa ser um estado. Ou seja, se eu crio um estado que depende de outro estado ou outra informação, eu não preciso criar um novo estado para isso. Assim, evito uma renderização, pois só um estado mudou.
+
+//Dificilmente utilizamos o useEffect pra atualizar um estado novo.
