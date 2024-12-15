@@ -90,7 +90,7 @@ justify-content: center;
 
 `;
 
-export const StartCountdownButton = styled.button`
+export const BaseCountdownButton = styled.button`
 width: 100%;
 border: 0;
 padding: 1rem;
@@ -115,5 +115,23 @@ cursor: not-allowed;
 
 &:not(:disabled):hover{//só pode aplicar se não estiver disabled
 background: ${(props) => props.theme['green-700']}
+}
+`;
+
+//vai usar o Base e alguns css´s a mais
+export const StartCountdownButton = styled(BaseCountdownButton)`
+background: ${(props) => props.theme['green-500']};
+color: ${(props) => props.theme['gray-100']}
+
+&:not(:disabled):hover{//só pode aplicar se não estiver disabled
+background: ${(props) => props.theme['green-700']}
+}
+`;
+
+export const StopCountdownButton = styled(BaseCountdownButton)`
+background: ${(props) => props.theme['red-500']};
+
+&:not(:disabled):hover{//só pode aplicar se não estiver disabled
+background: ${(props) => props.theme['red-700']}
 }
 `;
