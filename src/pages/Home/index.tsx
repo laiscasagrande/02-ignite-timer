@@ -1,27 +1,11 @@
 import { HandPalm, Play } from "phosphor-react";
-import { CountdownContainer, FormContainer, HomeContainer, MinutesAmountInput, Separator, StartCountdownButton, StopCountdownButton, TaskInput } from "./styles";
+import {HomeContainer, StartCountdownButton, StopCountdownButton} from "./styles";
 //import { useState } from "react";
-import { useForm } from 'react-hook-form'
-import { zodResolver } from "@hookform/resolvers/zod"; //para integrar a biblioteca zod no react-hook-form
-import * as zod from 'zod' //uso essa sintaxe (* as) para bibliotecas que não são export default
 import { useEffect, useState } from "react";
 import { differenceInSeconds } from 'date-fns' //calcula a diferença de duas datas em segundos
-import { NewCycleForm } from "./NewCycleForm";
-import { CountDown } from "./CountDown";
+import { NewCycleForm } from "./components/NewCycleForm";
+import { CountDown } from "./components/CountDown";
 
-const newCycleFormValidationSchema = zod.object({ //utilizamos o nome schema porque essas bibliotecas de validação utilizam schema base. Um schema nada mais é do que definirmos um formato e validarmos os dados do nosso formulário com base neste formato, com base em um schema 
-  task: zod.string().min(1, 'informe a tarefa'),//eu tenho um objeto que contém nome da tarefa e o tempo de execução, por isso coloquei zod.object
-  minutesAmount: zod.number().min(1, 'O ciclo precisa ser de no mínimo 5 minutos').max(60, 'O ciclo precisa ser de no máximo 60 minutos')
-})
-
-// interface NewCycleFormData { //Utilize interface quando você quer definit um objeto de validação, e use type quando você for criar uma tipagem do typeScript a partir de outra referência, de uma outra variável. Nesse caso, estamos criando um type a aprtir das informações que inferimos pelo zod acima
-//   task: string;
-//   minutesAmount: number;
-// }
-
-//Ele retirou isso, inferiu isso dentro da validação que fizemos usando o zod. Então, ao invés de criar uma nova interface contendo esses dados, como eu já tenho elas definidas na validação do zod, eu posso criar um type no qual a tipagem pode ser inferida através da validação com o zod
-type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema> //o inferir, dentro do typeScript, é definir automaticamnete a tipagem de alguma coisa
-//importante lembrar que, sempre que eu estou querendo refenrenciar uma variável javaScript dentro do typeScript, eu preciso usar o typeof dentro dela
 
 interface Cycle { //interface para definir qual vai ser o formato de cada ciclo que eu adcionar dentro da minha aplicação
   id: string;//como eu vou ter um histórico de ciclos, é importante que eu tenha um id para representar cada ciclo. Cada vez que eu tiver uma informação que vai ser uma lista, é importante que eu tenha alguma coisa para identificar cada informação. Nesse caso, uma informação para representar cada ciclo
@@ -41,54 +25,12 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null) //o id do ciclo ativo pode ser null, porque enquanto o usuário não iniciar um novo ciclo, ele será null
   //Este é um estado que irá controlar se um ciclo está ativo ou não com base no seu id
 
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0) //ela vai guardar a quantidade de segundos que já se passaram desde que o ciclo se iniciou. Assim, conseguimos ir reduzindo desse total de segundos (totalSeconds) menos os segundos que já se passaram
-
-  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({//É um objeto com várias funcionalidades que eu posso utizar para criar nosso formulário. Como o useForm retorna um objeto, eu posso usara desestruturação para extrair algumas variáveis desse retorno. As principais funções são o register e o handleSubmit
-    resolver: zodResolver(newCycleFormValidationSchema), //aqui eu tenho que passar meu schema de validação, ou seja, de quer forma eu quer validar os campos que estão presentes no formulário
-    defaultValues: { //ela traz a possibilidade de eu passar qual é o valor inicial de cada campo
-      task: '', //como eu coloquei a interface do objeto nos generics do useForm, se eu der um ctrl espaço aqui, vai aparecer todas as opções que eu tenho. Fica mais organizado dessa forma 
-      minutesAmount: 0
-    }
-  }) //aqui estou cirando um objeto de configuração para o useForm
   //const [task, setTask] = useState('')
 
   //O método find percorre todo o array e traz o primeiro elemento que satisfaz a consdição
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)//mostrar na tela qual é o ciclo ativo. Com base no id do ciclo ativo, ele vai percorrer todos os ciclos e verificar quel ciclo tem o mesmo id do ciclo ativo
 
   console.log("Ciclo ativo", activeCycle)
-
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
-  //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
-
-  useEffect(() => { //vamos criar nosso intervalo de tempo dentro do useEffect
-    let interval: number
-    if (activeCycle) { //sempre quando usamos uma variável que está fora do useEffect, temos que incluir essa variável no nosso array de dependências
-      interval = setInterval(() => {
-        const secondsDifference = differenceInSeconds(new Date(), activeCycle.startDate) //a data atual e a data quando o ciclo começou
-        //obs: quando atualizamos um estado e esse estado depende do seu valor anterior, devemos escrever isso em  um formato de função 
-        if (secondsDifference >= totalSeconds) { //se o total de segundos que eu percorri já foi igual ou maior que o número de tempo que o meu ciclo tem eu marco como completo
-          setCycles((state) => state.map(cycle => { //percorrer o ciclo
-            //se o ciclo que estou percorrendo for o ciclo ativo, eu vou retornar todos os dados do ciclo, porém vou adicionar uma nova informação, que e a interruptedDate como a nova data, senão, retorno o ciclo sem alterações
-            if (cycle.id === activeCycleId) {
-              return { ...cycle, finishedDate: new Date() }
-            } else {
-              return cycle
-            }
-          }))
-          setAmountSecondsPassed(totalSeconds)
-          clearInterval(interval)
-        } else {
-          setAmountSecondsPassed(secondsDifference)//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram. Só vou atualizar o tanto de segundos que passou se ainda não completei o total de segundoss
-        }
-
-      }, 1000)//Ele vai contar quantos segundos se passaram nesse intervalo a cada 1 segundo. Se o usuário informou 5, vai pegar o horario atual e vai decrementar a diferença em segundos do 5 até agora
-    } //se o meu ciclo estiver ativo (eu só quero fazer a redção do timer se o meu ciclo tiver ativo, porque se não estiver, vou fazer redução do que?), vou dar um setInterval a cada 1 segundo
-
-    return () => { //posso retornar uma função dentro do useEffect. Ela serve para que, assim que eu executar esse useEffect de novo, porque a variável activeCycle mudou aqui nas minhas dependências, eu quero resetar o que estava acontecendo no useEffect anteriormente 
-      clearInterval(interval)
-    }
-
-  }, [activeCycle, totalSeconds, activeCycleId])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
 
   //Como estou usando o register, os valores task e minutesAmount são registrados, armazenados. Assim, quando o formulário for submetido, o react-hook-form coleta os dados registrados e passa esses valores para a função handleCreateNewCycle, que é a função chamada na hora da submissão, e, para acessar esses valores, você pode usar um parâmetro, que neste caso é o data
   function handleCreateNewCycle(data: NewCycleFormData) { //esse data é um objeto que contém dois campos do nosso formulário(task e minutesAmount)
@@ -146,7 +88,7 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
     <HomeContainer>
       <form onSubmit={handleSubmit(handleCreateNewCycle)} action=""> {/*passamos a função handleCreateNewCycle como argumento para a função handleSubmit */}
        <NewCycleForm/>
-       <CountDown/>
+       <CountDown activeCycle={activeCycle} setCycles={setCycles} activeCycleId={activeCycleId}/>
         {activeCycle ? (
           <StopCountdownButton type="button" onClick={handleInterruptCycle}>
             <HandPalm size={24} />

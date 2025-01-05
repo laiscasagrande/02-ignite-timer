@@ -1,0 +1,4 @@
+Prop Drilling -> Quando a gente tem MUITAS propriedades APENAS para comunicação entre componentes
+Isso é trabalhoso e pode dificultar a manutenção da nossa aplicação. Pode receber no máximo duas propriedades
+
+Context API ->  Permite compartilharmos informações entre VÁRIOS componentes ao mesmo tempo. E não precisa de propriedades, é como se fossem informações globais que todos os componentes podem ter acesso e modificá-las. E todos os componentes que possuem essas informações são atualizados 
