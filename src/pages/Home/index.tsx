@@ -9,7 +9,7 @@ import { differenceInSeconds } from 'date-fns' //calcula a diferença de duas da
 
 const newCycleFormValidationSchema = zod.object({ //utilizamos o nome schema porque essas bibliotecas de validação utilizam schema base. Um schema nada mais é do que definirmos um formato e validarmos os dados do nosso formulário com base neste formato, com base em um schema 
   task: zod.string().min(1, 'informe a tarefa'),//eu tenho um objeto que contém nome da tarefa e o tempo de execução, por isso coloquei zod.object
-  minutesAmount: zod.number().min(5, 'O ciclo precisa ser de no mínimo 5 minutos').max(60, 'O ciclo precisa ser de no máximo 60 minutos')
+  minutesAmount: zod.number().min(1, 'O ciclo precisa ser de no mínimo 5 minutos').max(60, 'O ciclo precisa ser de no máximo 60 minutos')
 })
 
 // interface NewCycleFormData { //Utilize interface quando você quer definit um objeto de validação, e use type quando você for criar uma tipagem do typeScript a partir de outra referência, de uma outra variável. Nesse caso, estamos criando um type a aprtir das informações que inferimos pelo zod acima
@@ -27,6 +27,7 @@ interface Cycle { //interface para definir qual vai ser o formato de cada ciclo 
   minutesAmount: number; //a quantidade de minutos
   startDate: Date //Vou salvar a data que o meu timer começou a ficar ativo. O Date do javascript é tanto data quanto horário
   interruptedDate?: Date //data que o ciclo foi interrompido. Opcional porque la não necessariamente precisa interromper o clico
+  finishedDate?: Date //guardar o valor do ciclo somente se ele foi encerrado
 }
 
 export function Home() { //se você passar o mouse em cima do useForm, você verá que o primeiro parâmetro que eu posso passar no generic é umm objeto, e o segundo é um any 
@@ -54,13 +55,30 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
 
   console.log("Ciclo ativo", activeCycle)
 
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
+  //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
+
   useEffect(() => { //vamos criar nosso intervalo de tempo dentro do useEffect
     let interval: number
     if (activeCycle) { //sempre quando usamos uma variável que está fora do useEffect, temos que incluir essa variável no nosso array de dependências
       interval = setInterval(() => {
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate) //a data atual e a data quando o ciclo começou
-        )//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram
+        const secondsDifference = differenceInSeconds(new Date(), activeCycle.startDate) //a data atual e a data quando o ciclo começou
+        //obs: quando atualizamos um estado e esse estado depende do seu valor anterior, devemos escrever isso em  um formato de função 
+        if (secondsDifference >= totalSeconds) { //se o total de segundos que eu percorri já foi igual ou maior que o número de tempo que o meu ciclo tem eu marco como completo
+          setCycles((state) => state.map(cycle => { //percorrer o ciclo
+            //se o ciclo que estou percorrendo for o ciclo ativo, eu vou retornar todos os dados do ciclo, porém vou adicionar uma nova informação, que e a interruptedDate como a nova data, senão, retorno o ciclo sem alterações
+            if (cycle.id === activeCycleId) {
+              return { ...cycle, finishedDate: new Date() }
+            } else {
+              return cycle
+            }
+          }))
+          setAmountSecondsPassed(totalSeconds)
+          clearInterval(interval)
+        } else {
+          setAmountSecondsPassed(secondsDifference)//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram. Só vou atualizar o tanto de segundos que passou se ainda não completei o total de segundoss
+        }
+
       }, 1000)//Ele vai contar quantos segundos se passaram nesse intervalo a cada 1 segundo. Se o usuário informou 5, vai pegar o horario atual e vai decrementar a diferença em segundos do 5 até agora
     } //se o meu ciclo estiver ativo (eu só quero fazer a redção do timer se o meu ciclo tiver ativo, porque se não estiver, vou fazer redução do que?), vou dar um setInterval a cada 1 segundo
 
@@ -68,7 +86,7 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
       clearInterval(interval)
     }
 
-  }, [activeCycle])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
+  }, [activeCycle, totalSeconds, activeCycleId])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
 
   //Como estou usando o register, os valores task e minutesAmount são registrados, armazenados. Assim, quando o formulário for submetido, o react-hook-form coleta os dados registrados e passa esses valores para a função handleCreateNewCycle, que é a função chamada na hora da submissão, e, para acessar esses valores, você pode usar um parâmetro, que neste caso é o data
   function handleCreateNewCycle(data: NewCycleFormData) { //esse data é um objeto que contém dois campos do nosso formulário(task e minutesAmount)
@@ -91,7 +109,7 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
 
   function handleInterruptCycle() {
 
-    setCycles(cycles.map(cycle => { //percorrer o ciclo
+    setCycles((state) => state.map(cycle => { //percorrer o ciclo
       //se o ciclo que estou percorrendo for o ciclo ativo, eu vou retornar todos os dados do ciclo, porém vou adicionar uma nova informação, que e a interruptedDate como a nova data, senão, retorno o ciclo sem alterações
       if (cycle.id === activeCycleId) {
         return { ...cycle, interruptedDate: new Date() }
@@ -104,8 +122,6 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
   //Lembre-se que no react temos que seguir o conceito de imutabilidade, ou seja, temos que perorrer todo o array para aí então mudarmos a informação que desejamos. Aqui utilizamos o map. Por que?
   //Estou chamando a função setCycles, alterando o valor da variável que armazena os ciclos da aplicação, se estou alterando o valor, eu preciso dizer qual é o novo valor. Assim o map vai retornara cada ums dos ciclos e ele vai retornar de dentro do map cada um dos ciclos alterdos ou não 
 
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
-  //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0//A conta, o tanto que já passou. Se tiver um ciclo ativo, vai pegar o total de segundos menos o total de segundo que já passou
 
   const minutesAmount = Math.floor(currentSeconds / 60)//Agora eu vou calcular quantos minutos eu tenho dentro desse total de segundos. O floor arredonda para baixo. Eu estou fazendo isso para mostrar isso em tela
@@ -155,9 +171,9 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
             list=""
             placeholder="00"
             disabled={!!activeCycle}
-            // step={5} //vai pular de 5 em 5
-            // min={5}
-            // max={60}
+            step={5} //vai pular de 5 em 5
+            min={1}
+            max={60}
             {...register('minutesAmount', { valueAsNumber: true })} //o valueAsNumber é para informar que os minutos são n´meros, não strings
           >
           </MinutesAmountInput>
