@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { CountdownContainer, Separator } from "./styles";
 import { differenceInSeconds } from "date-fns";
-import { CyclesContext } from "../..";
+import { CyclesContext } from "../../../../contexts/CyclesContext";
 
 export function CountDown(){
   //obs: ao invés de passar a função setCycles para o contexto, criamos a função markCurrentCycleAsFinished. Por que fizemos isso? Porque a tipagem de setCycles ficara muito feia e fica mais performático fazer a função inteira lá na Home e só passar por contexto para usar neste componente 

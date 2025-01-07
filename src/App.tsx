@@ -3,12 +3,15 @@ import { defaultTheme } from "./styles/themes/default";
 import { GlobalStyle } from "./styles/global";
 import { BrowserRouter } from 'react-router-dom'
 import { Router } from './Router';
+import { CyclesContextProvider } from './contexts/CyclesContext';
 
-export function App() {
+export function App() { 
   return (
     <ThemeProvider theme={defaultTheme}> {/*Como ThemeProvider é um componente, ele espera uma propriedade chamada theme, que estou passando o defaultTheme que contém as cores*/}
       <BrowserRouter> {/*o theme e o globalStyle podem ficar fora, mas o Router deve ficar dentro do Browser, porque ele deve envolver as nossas rotas*/}
-        <Router />
+         <CyclesContextProvider> {/*componente que criei dentro do arquivo de contexto. Agora toda minha aplicação está dentro do contexto */}
+        <Router /> {/*como tipei o children como ReactNode, posso até colocar uma div aqui, pois é todo html válido*/}
+        </CyclesContextProvider>
       </BrowserRouter>
       <GlobalStyle /> {/*Tenho que colocar dentro do ThemeProvider para que nossos temas também possam ter acesso a essas estilizações*/}
     </ThemeProvider>
