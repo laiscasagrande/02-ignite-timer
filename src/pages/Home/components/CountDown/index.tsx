@@ -5,8 +5,8 @@ import { CyclesContext } from "../..";
 
 export function CountDown(){
   //obs: ao invés de passar a função setCycles para o contexto, criamos a função markCurrentCycleAsFinished. Por que fizemos isso? Porque a tipagem de setCycles ficara muito feia e fica mais performático fazer a função inteira lá na Home e só passar por contexto para usar neste componente 
-  const {activeCycle, activeCycleId, markCurrentCycleAsFinished} = useContext(CyclesContext)
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0) //ela vai guardar a quantidade de segundos que já se passaram desde que o ciclo se iniciou. Assim, conseguimos ir reduzindo desse total de segundos (totalSeconds) menos os segundos que já se passaram
+  const {activeCycle, activeCycleId, markCurrentCycleAsFinished, amountSecondsPassed, setSecondsPassed} = useContext(CyclesContext)
+  
    const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0//variável que vai converter o número de minutos que eu tenho no meu ciclo inserido pelo usuário em sgundos, porque é mais fácil eu trabalhar em segundos do que em minutos, porque o timer vai reduzir de segundo em segundo
     //Se houver um ciclo ativo, eu vou pegar a quantidade de minutos desse ciclo e converter para segundos
     
@@ -26,10 +26,10 @@ export function CountDown(){
             //   }
             // }))
             markCurrentCycleAsFinished() //só chamos ela aqui. O código comentado acima é a função markCurrentCycleAsFinished que fiz no componente Home
-            setAmountSecondsPassed(totalSeconds)
+            setSecondsPassed(totalSeconds)
             clearInterval(interval)
           } else {
-            setAmountSecondsPassed(secondsDifference)//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram. Só vou atualizar o tanto de segundos que passou se ainda não completei o total de segundoss
+            setSecondsPassed(secondsDifference)//vou comparar a data atual com a data que eu salvei no startDate e ver quantos segundos já se passaram. Só vou atualizar o tanto de segundos que passou se ainda não completei o total de segundoss
           }
   
         }, 1000)//Ele vai contar quantos segundos se passaram nesse intervalo a cada 1 segundo. Se o usuário informou 5, vai pegar o horario atual e vai decrementar a diferença em segundos do 5 até agora
@@ -39,7 +39,7 @@ export function CountDown(){
         clearInterval(interval)
       }
   
-    }, [activeCycle, totalSeconds, activeCycleId, markCurrentCycleAsFinished])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
+    }, [activeCycle, totalSeconds, activeCycleId, markCurrentCycleAsFinished, setSecondsPassed])  //cada vez que a variável activeCycle mudar, esse código vai executar de novo
 
     const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0//A conta, o tanto que já passou. Se tiver um ciclo ativo, vai pegar o total de segundos menos o total de segundo que já passou
 
