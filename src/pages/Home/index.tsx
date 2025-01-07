@@ -1,7 +1,7 @@
 import { HandPalm, Play } from "phosphor-react";
 import { HomeContainer, StartCountdownButton, StopCountdownButton } from "./styles";
 //import { useState } from "react";
-import { useContext} from "react";
+import { useContext } from "react";
 // import { differenceInSeconds } from 'date-fns' //calcula a diferença de duas datas em segundos
 import { NewCycleForm } from "./components/NewCycleForm";
 import { CountDown } from "./components/CountDown";
@@ -26,8 +26,8 @@ type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema> //o infer
 //importante lembrar que, sempre que eu estou querendo refenrenciar uma variável javaScript dentro do typeScript, eu preciso usar o typeof dentro dela
 
 export function Home() { //se você passar o mouse em cima do useForm, você verá que o primeiro parâmetro que eu posso passar no generic é umm objeto, e o segundo é um any 
- 
-  const {createNewCycle, interruptCurrentCycle, activeCycle} = useContext(CyclesContext)
+
+  const { createNewCycle, interruptCurrentCycle, activeCycle } = useContext(CyclesContext)
   //const [task, setTask] = useState('')
 
   //  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({//É um objeto com várias funcionalidades que eu posso utizar para criar nosso formulário. Como o useForm retorna um objeto, eu posso usara desestruturação para extrair algumas variáveis desse retorno. As principais funções são o register e o handleSubmit
@@ -48,18 +48,22 @@ export function Home() { //se você passar o mouse em cima do useForm, você ver
 
   const { handleSubmit, watch, reset } = newCycleForm
 
+  function handleCreateNewCycle(data: NewCycleFormData) { //estou criando uma função para eu usar reset na função createNewCycle sem precisar usar o react hook form dentro do contexto
+    createNewCycle(data)
+    reset()
+  }
   const task = watch('task')//quero obervar o campo task, que foi o nome que eu dei no register. Agora consigo saber o valor do meu campo task em tempo real. Vou observar o campo task. Se ele for diferente de vazio, eu quero habilitar o botão  
   const isSubmitDisabled = !task //meu botão vai estar desabilitado quando eu não tiver nada dentro da task. Para questões de legibilidade
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(createNewCycle)} action=""> {/*passamos a função handleCreateNewCycle como argumento para a função handleSubmit */}
-       
-          <FormProvider {...newCycleForm}> {/*o ... é o spreed e o newCycleForm é a variável que criamos para o useForm. O spreed serve para pegar cada uma das propriedades(register, formState, etc) do objeto newCycleForm e passo como uma propriedade para o FormProvider*/}
-            <NewCycleForm />
-          </FormProvider>
-          <CountDown />
-        
+      <form onSubmit={handleSubmit(handleCreateNewCycle)} action=""> {/*passamos a função handleCreateNewCycle como argumento para a função handleSubmit */}
+
+        <FormProvider {...newCycleForm}> {/*o ... é o spreed e o newCycleForm é a variável que criamos para o useForm. O spreed serve para pegar cada uma das propriedades(register, formState, etc) do objeto newCycleForm e passo como uma propriedade para o FormProvider*/}
+          <NewCycleForm />
+        </FormProvider>
+        <CountDown />
+
         {activeCycle ? (
           <StopCountdownButton type="button" onClick={interruptCurrentCycle}>
             <HandPalm size={24} />
