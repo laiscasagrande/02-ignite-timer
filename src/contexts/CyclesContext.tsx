@@ -35,20 +35,51 @@ interface CyclesContextProviderProps {
     children: ReactNode; //ReactNode significa qualquer html válido
 }
 
+interface CyclesState {
+    cycles: Cycle[]
+    activeCycleId: string | null
+}
+
 export function CyclesContextProvider({ children }: CyclesContextProviderProps) { //como lá no app estou chamando o componente <Route/> dentro deste componente CyclesContextProvider, precisei colocar o children
     //-> informação do ciclo:
     //const [cycles, setCycles] = useState<Cycle[]>([]) //um estado é a única forma de eu conseguir armazenar uma informação no meu componente que vá fazer com que minha interface reaja a essa informação, se muda.
     //o meu estado vai armazenar uma lista de ciclos. Um array de ciclos
-    const [cycles, dispatch] = useReducer((state: Cycle[], action: any) => { //Recebe dois parâmetros: uma função que recebe dois parâmetros: state(valor em tempo real da variável de ciclos. É a variável cycles) e uma action(qual ação o usuário está querendo realizar de alteração dentro da nossa variável), o segundo é qual o valor inicial da minha variável cycles
+    const [cyclesState, dispatch] = useReducer((state: CyclesState, action: any) => { //Recebe dois parâmetros: uma função que recebe dois parâmetros: state(valor em tempo real da variável de ciclos. É a variável cycles) e uma action(qual ação o usuário está querendo realizar de alteração dentro da nossa variável), o segundo é qual o valor inicial da minha variável cycles
         //Aqui dentro do useReducer, eu tenho uma função que vai agregar todas as ações de modificação desse estado (adicionar um novo item, interromper um ciclo, marcar como finalizado). Desse modo, vou ter um ponto central para todas alterações necessárias. E cada uma dessas alteções distiguimos através do type ('ADD_NEW_CYCLE')
         if (action.type === 'ADD_NEW_CYCLE') {
-            return [...state, action.payload.newCycle] //adicionar no array de ciclos
+            // return [...state, action.payload.newCycle] //adicionar no array de ciclos
+            return {
+                ...state,//eu preciso copiar todos os dados que eu já tenho no meu objeto, ou seja, no meu  estado, para que eu não mude o valor do activeCycleId quando estou adicionando um novo ciclo
+                cycles: [...state.cycles, action.payload.newCycle],//preciso atualizar o meu valor dos ciclos, falando que o meu ciclo é uma cópia dos ciclos que eu já tenho no meu state e adicionando um novo ciclo no final
+                activeCycleId: action.payload.newCycle.id //estou pegando o id do novo ciclo que estou inserindo acima e setando como ciclo ativo    
+            }
         }
+        if (action.type === 'INTERRUPT_CURRENT_CYCLE') {
+            return {
+                ...state,
+                cycles: state.cycles.map(cycle => { 
+                    //se o ciclo que estou percorrendo for o ciclo ativo, eu vou retornar todos os dados do ciclo, porém vou adicionar uma nova informação, que e a interruptedDate como a nova data, senão, retorno o ciclo sem alterações
+                    if (cycle.id === state.activeCycleId) {
+                        return { ...cycle, interruptedDate: new Date() }
+                    } else {
+                        return cycle
+                    }
+                }),
+                activeCycleId: null //o contador fica zerado quando interrompo
+            }
+        }
+
         return state; //o retorno que faço dessa função aqui é o novo valor que esse estado vai receber sempre que uma action for disparada
-    }, [])
+    }, {
+        cycles: [],
+        activeCycleId: null
+    })
+    //Agora, tanto o cycles quanto o activeCycleId vão ser controlados por um único estado . Ou seja, eu não preciso ter vários estados e várias informações se essas informações pertencem ao mesmo assunto
+
+    const { cycles, activeCycleId } = cyclesState
 
     //-> informação do ciclo ativo:
-    const [activeCycleId, setActiveCycleId] = useState<string | null>(null) //o id do ciclo ativo pode ser null, porque enquanto o usuário não iniciar um novo ciclo, ele será null
+    // const [activeCycleId, setActiveCycleId] = useState<string | null>(null) //o id do ciclo ativo pode ser null, porque enquanto o usuário não iniciar um novo ciclo, ele será null
     //Este é um estado que irá controlar se um ciclo está ativo ou não com base no seu id
     const [amountSecondsPassed, setAmountSecondsPassed] = useState(0) //ela vai guardar a quantidade de segundos que já se passaram desde que o ciclo se iniciou. Assim, conseguimos ir reduzindo desse total de segundos (totalSeconds) menos os segundos que já se passaram
 
@@ -97,7 +128,7 @@ export function CyclesContextProvider({ children }: CyclesContextProviderProps) 
         })
 
         //setCycles((state) => [...state, newCycle])//adicionar meu novo ciclo a listagem de ciclos. Assim, para acresecentar um novo ciclo, eu preciso pegar todos os ciclos que ue já tenho e adiocinar o novo ciclo
-        setActiveCycleId(id) //passo para a função responsável por controlar se um ciclo está ativo ou não pelo id do ciclo, o id do ciclo. Essa função vai guardar na varável activeCycleId o id do ciclo.
+        // setActiveCycleId(id) //passo para a função responsável por controlar se um ciclo está ativo ou não pelo id do ciclo, o id do ciclo. Essa função vai guardar na varável activeCycleId o id do ciclo.
         setAmountSecondsPassed(0)
         //Quando a função for chmamada, ele vai criar um id para o ciclo ( String(new Date().getTime())) e, ao mesmo tempo que ele criar, ele vai guardar esse id na função setActiveCycleId. Assim, o id criado quando o formulário for chamado vai ser o mesmo, pois está tudo na mesma função. Ele cria ali em cima e passa aqui(setActiveCycleId), por isso, o método sempre vai retornar true
         //Além disso, sempre que uma alteração de estado depender do seu valor anterior, a gente usa o formato de arrow function e passa um argumento
@@ -121,7 +152,7 @@ export function CyclesContextProvider({ children }: CyclesContextProviderProps) 
         //         return cycle
         //     }
         // }))
-        setActiveCycleId(null) //setar para null porque não quero que tenha mais nenhum ciclo ativo
+        //setActiveCycleId(null) //setar para null porque não quero que tenha mais nenhum ciclo ativo
     }
     //Lembre-se que no react temos que seguir o conceito de imutabilidade, ou seja, temos que perorrer todo o array para aí então mudarmos a informação que desejamos. Aqui utilizamos o map. Por que?
     //Estou chamando a função setCycles, alterando o valor da variável que armazena os ciclos da aplicação, se estou alterando o valor, eu preciso dizer qual é o novo valor. Assim o map vai retornara cada ums dos ciclos e ele vai retornar de dentro do map cada um dos ciclos alterdos ou não 
